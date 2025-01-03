@@ -27,19 +27,33 @@ io.on("connection", (socket) => {
   socket.on("join room", (data) => {
     const { room, username } = data;
     console.log(`User ${username} joined room: ${room}`);
-    socket.join(room); // Ensure the user joins the specified room
+    socket.join(room);
+  });
+
+  socket.on("leave room", (room) => {
+    console.log(`User left room: ${room}`);
+    socket.leave(room);
   });
 
   socket.on("chat message", (msg) => {
-    io.to(msg.room).emit("chat message", msg); // Emit message only to the current room
+    io.to(msg.room).emit("chat message", msg);
+  });
+
+  socket.on("request room users", (roomName) => {
+    const room = io.sockets.adapter.rooms.get(roomName);
+    if (room) {
+      const users = Array.from(room).map((id) => io.sockets.sockets.get(id).username);
+      socket.emit("room users", { name: roomName, users });
+    } else {
+      socket.emit("room users", { name: roomName, users: [] });
+    }
   });
 
   socket.on("create room", (newRoom, creator) => {
-    if (!io.sockets.adapter.rooms[newRoom]) {
-      io.sockets.adapter.rooms[newRoom] = { users: {} };
-      socket.emit("room created", newRoom);
+    if (!io.sockets.adapter.rooms.has(newRoom)) {
       socket.join(newRoom);
-      io.emit("rooms list", Object.keys(io.sockets.adapter.rooms));
+      io.emit("room created", newRoom);
+      io.emit("request rooms list"); // Request updated rooms list
     } else {
       socket.emit("room exists", newRoom);
     }
@@ -49,8 +63,6 @@ io.on("connection", (socket) => {
     console.log("A user disconnected");
   });
 });
-
-//////////////////////////////
 
 mongoose
   .connect(

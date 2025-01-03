@@ -1,15 +1,16 @@
 /* Header.css */
 header {
-    display: flex;
-    width:90vw;
-    justify-content:center;
-    align-items: right;
-    background-color: gray;
-    color: white;
-    padding: 1rem 2rem;
-    font-size: larger;
-    font-weight: bolder;
-  }
+  display: flex;
+  width: 90vw;
+  justify-content: center;
+  align-items: right;
+  background-color: gray;
+  color: white;
+  padding: 1rem 2rem;
+  font-size: larger;
+  font-weight: bolder;
+  z-index: 1; /* Ensure header is above the sidebar */
+}
   
   .logo h1 {
     margin: 0;

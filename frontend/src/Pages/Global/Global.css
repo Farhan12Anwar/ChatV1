@@ -10,16 +10,33 @@ body {
 .App {
   text-align: center;
   padding: 20px;
+  display: block;
+  height: 100vh;
+  flex-direction: column;
 }
 
-/* Header Styling */
+.main-content {
+  margin-left: 250px; /* Adjust the margin to prevent content overlap */
+  padding: 20px; /* Add some padding to the main content */
+  height: 100vh; /* Full viewport height */
+  overflow-y: auto; /* Enable scrolling if content exceeds the height */
+}
+
 header {
-  background-color: #007bff; /* Blue background */
-  color: white; /* White text */
-  padding: 15px 0;
+  display: flex;
+  width: 90vw;
+  justify-content: center;
+  align-items: right;
+  background-color: gray;
+  color: white;
+  padding: 1rem 2rem;
+  font-size: larger;
+  font-weight: bolder;
+  z-index: 1; /* Ensure header is above the sidebar */
 }
 
 header h1 {
+  display:block;
   margin: 0;
   font-size: 24px;
 }
@@ -51,14 +68,15 @@ header h1 {
 
 /* Chat Window Styling */
 #chat-window {
-  max-height: 400px; /* Fixed height for chat */
+  max-height: 60vh; /* Adjusting for a better height on smaller screens */
   overflow-y: auto; /* Scroll when messages overflow */
   border: 1px solid #ddd; /* Light border */
   padding: 10px;
   background-color: #fff; /* White background for chat area */
   border-radius: 10px;
   margin: 20px auto;
-  width: 80%;
+  width: 80%; /* Restrict chat width */
+  z-index: 1; /* Ensure chat window is above the sidebar */
 }
 
 #messages {
@@ -146,13 +164,58 @@ form button:hover {
   background-color: #0056b3; /* Darker blue on hover */
 }
 
+/* Sidebar Styling */
+
+.sidebar {
+  width: 250px;
+  padding: 15px;
+  background-color: #f4f4f4;
+  border-right: 1px solid #ddd;
+  height: 100vh;
+  overflow-y: auto;
+  position: fixed; /* Sidebar is fixed */
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 999; /* Ensure sidebar stays on top */
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1); /* Optional: Adds some shadow for better visibility */
+}
+
+
+.toggle-sidebar {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.sidebar-content {
+  display: none; /* Initially hidden */
+}
+
+.sidebar-content.show {
+  display: block; /* Show when button is clicked */
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+li {
+  padding: 5px 0;
+}
+
 /* Responsive Design */
 @media screen and (max-width: 768px) {
   #chat-window {
-    width: 95%;
+    width: 95%; /* Full-width chat window for smaller screens */
   }
 
   form input[type="text"] {
-    width: 200px;
+    width: 200px; /* Adjust input width for smaller screens */
   }
 }

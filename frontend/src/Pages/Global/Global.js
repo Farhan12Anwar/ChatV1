@@ -3,6 +3,7 @@ import { io } from "socket.io-client";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./Global.css";
 import Header from "../../Components/Header/Header";
+import Sidebar from "../../Components/Sidebar/Sidebar";
 
 const socket = io("http://localhost:8080"); // Correct socket connection URL
 
@@ -10,17 +11,16 @@ const Global = () => {
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
   const [currentRoom, setCurrentRoom] = useState("global"); // Default to global room
-  const [rooms, setRooms] = useState(["global"]); // List of available rooms
-  const location = useLocation();
-  const username = location.state?.username;
+  const [rooms, setRooms] = useState([{ name: "global", users: [] }]); // Initial room
+  const username = useLocation().state?.username;
   const navigate = useNavigate();
 
   // Effect to handle room creation and feedback from server
   useEffect(() => {
     socket.on("room created", (newRoom) => {
       console.log(`Room ${newRoom} created successfully.`);
-      setRooms((prevRooms) => [...prevRooms, newRoom]); // Add new room to list
-      setCurrentRoom(newRoom); // Update the current room only for the creator
+      setRooms((prevRooms) => [...prevRooms, { name: newRoom, users: [] }]);
+      setCurrentRoom(newRoom);
     });
 
     socket.on("room exists", (roomName) => {
@@ -30,33 +30,45 @@ const Global = () => {
     // Listen for rooms list from the server
     socket.emit("request rooms list");
     socket.on("rooms list", (availableRooms) => {
-      setRooms(availableRooms); // Update available rooms
+      setRooms(availableRooms);
+    });
+
+    // Fetch current room users
+    socket.emit("request room users", currentRoom);
+    socket.on("room users", (roomData) => {
+      const updatedRooms = rooms.map((room) =>
+        room.name === roomData.name ? roomData : room
+      );
+      setRooms(updatedRooms);
     });
 
     return () => {
+      socket.off("room users");
       socket.off("rooms list");
     };
-  }, []);
+  }, [currentRoom, rooms]);
 
   useEffect(() => {
-    console.log(`Current Room: ${currentRoom}, Username: ${username}`); // Log username
+    // Reset messages when switching rooms
+    setMessages([]);
+
+    // Emit join event for the new room
     socket.emit("join room", { room: currentRoom, username });
-  }, [currentRoom, username]);
 
-  useEffect(() => {
-    // Join the default global room
-    socket.emit("join room", { room: currentRoom, username }); // Ensure username is included here
-
-    // Listen for incoming messages from the server
-    socket.on("chat message", (msg) => {
-      setMessages((prevMessages) => [...prevMessages, msg]);
-    });
-
-    // Clean up the listener on component unmount
-    return () => {
-      socket.off("chat message");
+    // Listen for messages only for the current room
+    const messageListener = (msg) => {
+      if (msg.room === currentRoom) {
+        setMessages((prevMessages) => [...prevMessages, msg]);
+      }
     };
-  }, [currentRoom]);
+
+    socket.on("chat message", messageListener);
+
+    // Clean up the listener for the previous room
+    return () => {
+      socket.off("chat message", messageListener);
+    };
+  }, [currentRoom, username]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -67,61 +79,64 @@ const Global = () => {
       if (
         newRoom &&
         /^[a-zA-Z0-9]+$/.test(newRoom) &&
-        !rooms.includes(newRoom)
+        !rooms.some((room) => room.name === newRoom)
       ) {
-        socket.emit("create room", newRoom, username); // Pass the username when creating the room
+        socket.emit("create room", newRoom, username);
       } else {
         alert("Invalid room name or room already exists.");
       }
     } else if (message.startsWith("/")) {
       const commandParts = message.trim().split(" ");
-      const newRoom = commandParts[0].substring(1); // Extract room name from command
+      const newRoom = commandParts[0].substring(1); // Extract room name
       if (newRoom !== currentRoom) {
         socket.emit("leave room", currentRoom); // Leave the current room
         setCurrentRoom(newRoom); // Update current room
-        socket.emit("join room", { room: newRoom, username }); // Pass username when joining the room
       }
     } else {
-      socket.emit("chat message", newMessage); // Emit message with room info
+      socket.emit("chat message", newMessage);
     }
     setMessage(""); // Clear the input field
   };
 
   return (
     <div className="App">
-      <Header />
-      <h1>Global Chat</h1>
-      <h1>Current Room: {currentRoom}</h1>
-      <div id="chat-window">
-        <ul id="messages">
-          {messages.map((msg, index) => (
-            <li
-              key={index}
-              className={
-                msg.sender === username ? "my-message" : "other-message"
-              }
-            >
-              <span className="sender">{msg.sender}</span>
-              <p className="message-text">{msg.text}</p>
-            </li>
-          ))}
-        </ul>
+      <Sidebar rooms={rooms} />
+      <div className="main-content">
+        <Header />
+        <h1>Global Chat</h1>
+        <h1>Current Room: {currentRoom}</h1>
+        <div id="chat-window">
+          <ul id="messages">
+            {messages.map((msg, index) => (
+              <li
+                key={index}
+                className={
+                  msg.sender === username ? "my-message" : "other-message"
+                }
+              >
+                <span className="sender">{msg.sender}</span>
+                <p className="message-text">{msg.text}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <input
+            type="text"
+            id="message"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Type a message or a command to switch room"
+          />
+          <button type="submit">Send</button>
+        </form>
+
+        <h1>
+          To connect to different channels, enter '/' followed by the channel
+          name
+        </h1>
       </div>
-
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          id="message"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder="Type a message or a command to switch room"
-        />
-        <button type="submit">Send</button>
-      </form>
-
-      <h1>
-        To connect to different channels, enter '/' followed by the channel name
-      </h1>
     </div>
   );
 };
