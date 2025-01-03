@@ -1,0 +1,158 @@
+/* General Styling */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f4f4f4; /* Light background */
+  color: #333; /* Dark text */
+}
+
+.App {
+  text-align: center;
+  padding: 20px;
+}
+
+/* Header Styling */
+header {
+  background-color: #007bff; /* Blue background */
+  color: white; /* White text */
+  padding: 15px 0;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.navigation {
+  margin-top: 10px;
+}
+
+.navigation ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.navigation li {
+  display: inline-block;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.navigation li:hover {
+  color: #d1e7ff;
+}
+
+/* Chat Window Styling */
+#chat-window {
+  max-height: 400px; /* Fixed height for chat */
+  overflow-y: auto; /* Scroll when messages overflow */
+  border: 1px solid #ddd; /* Light border */
+  padding: 10px;
+  background-color: #fff; /* White background for chat area */
+  border-radius: 10px;
+  margin: 20px auto;
+  width: 80%;
+}
+
+#messages {
+  list-style-type: none; /* Remove bullet points */
+  padding: 0;
+  margin: 0;
+}
+
+#messages li {
+  display: flex;
+  flex-direction: column; /* Stack sender name and message */
+  margin-bottom: 15px;
+}
+
+/* Message Styling */
+.my-message {
+  align-self: flex-end; /* Aligns the message to the right */
+  background-color: #d1e7ff; /* Light blue background for your messages */
+  color: #000; /* Black text */
+  padding: 10px;
+  border-radius: 10px;
+  max-width: 60%; /* Restricts the message width */
+  text-align: right;
+  margin-left: auto; /* Pushes message to the right */
+}
+
+.other-message {
+  align-self: flex-start; /* Aligns the message to the left */
+  background-color: #f1f1f1; /* Light gray background for others' messages */
+  color: #000; /* Black text */
+  padding: 10px;
+  border-radius: 10px;
+  max-width: 60%; /* Restricts the message width */
+  text-align: left;
+  margin-right: auto; /* Pushes message to the left */
+}
+
+.sender {
+  font-size: 12px;
+  font-weight: bold;
+  color: #555; /* Gray color for sender name */
+  margin-bottom: 5px;
+}
+
+.message-text {
+  font-size: 14px;
+  color: #000;
+  margin: 0;
+}
+
+/* Form Styling */
+form {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+form input[type="text"] {
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc; /* Light gray border */
+  border-radius: 5px;
+  width: 300px;
+  outline: none;
+}
+
+form input[type="text"]:focus {
+  border-color: #007bff; /* Blue border on focus */
+}
+
+form button {
+  background-color: #007bff; /* Blue background */
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+form button:hover {
+  background-color: #0056b3; /* Darker blue on hover */
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+  #chat-window {
+    width: 95%;
+  }
+
+  form input[type="text"] {
+    width: 200px;
+  }
+}
