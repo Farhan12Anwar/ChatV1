@@ -68,14 +68,15 @@ header h1 {
 
 /* Chat Window Styling */
 #chat-window {
-  max-height: 60vh; /* Adjusting for a better height on smaller screens */
+  height:60vh;
+  width:100vw;
   overflow-y: auto; /* Scroll when messages overflow */
   border: 1px solid #ddd; /* Light border */
   padding: 10px;
   background-color: #fff; /* White background for chat area */
   border-radius: 10px;
   margin: 20px auto;
-  width: 80%; /* Restrict chat width */
+  width: 100%; /* Restrict chat width */
   z-index: 1; /* Ensure chat window is above the sidebar */
 }
 

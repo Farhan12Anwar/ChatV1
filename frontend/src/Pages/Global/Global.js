@@ -145,11 +145,6 @@ const Global = () => {
           />
           <button type="submit">Send</button>
         </form>
-
-        <h1>
-          To connect to different channels, enter '/' followed by the channel
-          name
-        </h1>
       </div>
     </div>
   );
