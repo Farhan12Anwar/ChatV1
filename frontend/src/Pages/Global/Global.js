@@ -17,9 +17,7 @@ const Global = () => {
 
   // Effect to handle room creation and feedback from server
   useEffect(() => {
-    // Listen for room creation and update room list
     socket.on("room created", (newRoom) => {
-      console.log(`Room ${newRoom} created successfully.`);
       setRooms((prevRooms) => [...prevRooms, { name: newRoom, users: [] }]);
       setCurrentRoom(newRoom);
     });
@@ -28,13 +26,11 @@ const Global = () => {
       alert(`Room ${roomName} already exists.`);
     });
 
-    // Listen for rooms list from the server
     socket.emit("request rooms list");
     socket.on("rooms list", (roomsList) => {
-      setRooms(roomsList); // Update the rooms list
+      setRooms(roomsList);
     });
 
-    // Fetch current room users
     socket.emit("request room users", currentRoom);
     socket.on("room users", (roomData) => {
       const updatedRooms = rooms.map((room) =>
@@ -47,29 +43,25 @@ const Global = () => {
       socket.off("room users");
       socket.off("rooms list");
     };
-  }, [currentRoom, rooms]); // Include rooms as a dependency
+  }, [currentRoom, rooms]);
 
   useEffect(() => {
-    // Request room list from the server
     socket.emit("request rooms list");
 
     socket.on("rooms list", (roomsList) => {
-      setRooms(roomsList); // Update rooms state
+      setRooms(roomsList);
     });
 
     return () => {
       socket.off("rooms list");
     };
-  }, [socket]); // Ensure the dependency array includes `socket`
+  }, [socket]);
 
   useEffect(() => {
-    // Reset messages when switching rooms
     setMessages([]);
 
-    // Emit join event for the new room
     socket.emit("join room", { room: currentRoom, username });
 
-    // Listen for messages only for the current room
     const messageListener = (msg) => {
       if (msg.room === currentRoom) {
         setMessages((prevMessages) => [...prevMessages, msg]);
@@ -78,7 +70,6 @@ const Global = () => {
 
     socket.on("chat message", messageListener);
 
-    // Clean up the listener for the previous room
     return () => {
       socket.off("chat message", messageListener);
     };
@@ -95,7 +86,7 @@ const Global = () => {
         /^[a-zA-Z0-9]+$/.test(newRoom) &&
         !rooms.some((room) => room.name === newRoom)
       ) {
-        socket.emit("create room", newRoom, username); // Emit create room event
+        socket.emit("create room", newRoom, username);
       } else {
         alert("Invalid room name or room already exists.");
       }
@@ -103,13 +94,13 @@ const Global = () => {
       const commandParts = message.trim().split(" ");
       const newRoom = commandParts[0].substring(1); // Extract room name
       if (newRoom !== currentRoom) {
-        socket.emit("leave room", currentRoom); // Leave the current room
-        setCurrentRoom(newRoom); // Update current room
+        socket.emit("leave room", currentRoom);
+        setCurrentRoom(newRoom);
       }
     } else {
       socket.emit("chat message", newMessage);
     }
-    setMessage(""); // Clear the input field
+    setMessage("");
   };
 
   return (
@@ -145,6 +136,11 @@ const Global = () => {
           />
           <button type="submit">Send</button>
         </form>
+
+        <h1>
+          To connect to different channels, enter '/' followed by the channel
+          name
+        </h1>
       </div>
     </div>
   );

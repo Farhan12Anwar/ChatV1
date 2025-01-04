@@ -220,3 +220,23 @@ li {
     width: 200px; /* Adjust input width for smaller screens */
   }
 }
+
+
+.my-message {
+  background-color: lightblue;
+  padding: 5px;
+  margin-bottom: 5px;
+  border-radius: 5px;
+}
+
+.other-message {
+  background-color: lightgray;
+  padding: 5px;
+  margin-bottom: 5px;
+  border-radius: 5px;
+}
+
+img {
+  max-width: 200px;
+  border-radius: 5px;
+}

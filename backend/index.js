@@ -1,3 +1,4 @@
+// Backend Code (Server Side)
 require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
@@ -23,38 +24,30 @@ app.use(express.static("public"));
 io.on("connection", (socket) => {
   console.log(`User connected: ${socket.id}`);
 
-  // Join room handler
   socket.on("join room", ({ room, username }) => {
     socket.join(room);
     console.log(`${username} joined room: ${room}`);
-
-    // Update rooms list
-    const rooms = Array.from(io.sockets.adapter.rooms.keys())
-      .filter((r) => !io.sockets.sockets.has(r))
-      .map((roomName) => {
-        const users = Array.from(io.sockets.adapter.rooms.get(roomName) || []);
-        return { name: roomName, users };
-      });
-
-    io.emit("rooms list", rooms);
+    io.emit("rooms list", getRoomsList());
   });
 
-  // Leave room handler
   socket.on("leave room", (room) => {
     socket.leave(room);
     console.log(`User left room: ${room}`);
   });
 
-  // Chat message handler
+  socket.on("create room", (roomName) => {
+    if (!io.sockets.adapter.rooms.has(roomName)) {
+      socket.join(roomName);
+      console.log(`Room created and joined: ${roomName}`);
+      io.emit("rooms list", getRoomsList());
+    } else {
+      socket.emit("room exists", roomName);
+    }
+  });
+
   socket.on("chat message", (msg) => {
     io.to(msg.room).emit("chat message", msg);
     console.log(`Message in ${msg.room}: ${msg.text} by ${msg.sender}`);
-  });
-
-  // Create room handler
-  socket.on("create room", (roomName) => {
-    console.log(`Room created: ${roomName}`);
-    io.emit("rooms list", getRoomsList());
   });
 
   socket.on("disconnect", () => {
