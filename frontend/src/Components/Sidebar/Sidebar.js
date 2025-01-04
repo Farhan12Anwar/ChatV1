@@ -1,6 +1,5 @@
-// Sidebar.js
-import React from 'react';
-import './Sidebar.css';
+import React from "react";
+import "./Sidebar.css";
 
 const Sidebar = ({ rooms }) => {
   return (

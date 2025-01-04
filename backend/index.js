@@ -11,7 +11,7 @@ const PORT = 8000;
 const server = http.createServer(app);
 const io = socketIo(8080, {
   cors: {
-    origin: "http://localhost:3000", // The origin of your React app
+    origin: "http://localhost:3000", // React app origin
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"],
     credentials: true,
@@ -20,58 +20,65 @@ const io = socketIo(8080, {
 
 app.use(express.static("public"));
 
-// Handle socket connections
 io.on("connection", (socket) => {
-  console.log("A user connected");
+  console.log(`User connected: ${socket.id}`);
 
-  socket.on("join room", (data) => {
-    const { room, username } = data;
-    console.log(`User ${username} joined room: ${room}`);
+  // Join room handler
+  socket.on("join room", ({ room, username }) => {
     socket.join(room);
+    console.log(`${username} joined room: ${room}`);
+
+    // Update rooms list
+    const rooms = Array.from(io.sockets.adapter.rooms.keys())
+      .filter((r) => !io.sockets.sockets.has(r))
+      .map((roomName) => {
+        const users = Array.from(io.sockets.adapter.rooms.get(roomName) || []);
+        return { name: roomName, users };
+      });
+
+    io.emit("rooms list", rooms);
   });
 
+  // Leave room handler
   socket.on("leave room", (room) => {
-    console.log(`User left room: ${room}`);
     socket.leave(room);
+    console.log(`User left room: ${room}`);
   });
 
+  // Chat message handler
   socket.on("chat message", (msg) => {
     io.to(msg.room).emit("chat message", msg);
+    console.log(`Message in ${msg.room}: ${msg.text} by ${msg.sender}`);
   });
 
-  socket.on("request room users", (roomName) => {
-    const room = io.sockets.adapter.rooms.get(roomName);
-    if (room) {
-      const users = Array.from(room).map((id) => io.sockets.sockets.get(id).username);
-      socket.emit("room users", { name: roomName, users });
-    } else {
-      socket.emit("room users", { name: roomName, users: [] });
-    }
-  });
-
-  socket.on("create room", (newRoom, creator) => {
-    if (!io.sockets.adapter.rooms.has(newRoom)) {
-      socket.join(newRoom);
-      io.emit("room created", newRoom);
-      io.emit("request rooms list"); // Request updated rooms list
-    } else {
-      socket.emit("room exists", newRoom);
-    }
+  // Create room handler
+  socket.on("create room", (roomName) => {
+    console.log(`Room created: ${roomName}`);
+    io.emit("rooms list", getRoomsList());
   });
 
   socket.on("disconnect", () => {
-    console.log("A user disconnected");
+    console.log(`User disconnected: ${socket.id}`);
   });
+
+  const getRoomsList = () => {
+    return Array.from(io.sockets.adapter.rooms.keys())
+      .filter((r) => !io.sockets.sockets.has(r))
+      .map((roomName) => {
+        const users = Array.from(io.sockets.adapter.rooms.get(roomName) || []);
+        return { name: roomName, users };
+      });
+  };
 });
 
 mongoose
-  .connect(
-    "mongodb+srv://anwarfarhan339:7btRGnUp8Vn0UiQA@cluster0.wqknr.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0",
-    { useNewUrlParser: true, useUnifiedTopology: true }
-  )
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.log(err));
 
 app.listen(PORT, () => {
-  console.log("Server Listening on Port 8000");
+  console.log(`Server Listening on Port ${PORT}`);
 });

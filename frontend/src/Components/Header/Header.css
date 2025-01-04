@@ -1,7 +1,7 @@
 /* Header.css */
 header {
   display: flex;
-  width: 90vw;
+  width: 75vw;
   justify-content: center;
   align-items: right;
   background-color: gray;

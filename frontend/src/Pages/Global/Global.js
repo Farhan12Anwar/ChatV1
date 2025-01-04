@@ -17,6 +17,7 @@ const Global = () => {
 
   // Effect to handle room creation and feedback from server
   useEffect(() => {
+    // Listen for room creation and update room list
     socket.on("room created", (newRoom) => {
       console.log(`Room ${newRoom} created successfully.`);
       setRooms((prevRooms) => [...prevRooms, { name: newRoom, users: [] }]);
@@ -29,8 +30,8 @@ const Global = () => {
 
     // Listen for rooms list from the server
     socket.emit("request rooms list");
-    socket.on("rooms list", (availableRooms) => {
-      setRooms(availableRooms);
+    socket.on("rooms list", (roomsList) => {
+      setRooms(roomsList); // Update the rooms list
     });
 
     // Fetch current room users
@@ -46,7 +47,20 @@ const Global = () => {
       socket.off("room users");
       socket.off("rooms list");
     };
-  }, [currentRoom, rooms]);
+  }, [currentRoom, rooms]); // Include rooms as a dependency
+
+  useEffect(() => {
+    // Request room list from the server
+    socket.emit("request rooms list");
+
+    socket.on("rooms list", (roomsList) => {
+      setRooms(roomsList); // Update rooms state
+    });
+
+    return () => {
+      socket.off("rooms list");
+    };
+  }, [socket]); // Ensure the dependency array includes `socket`
 
   useEffect(() => {
     // Reset messages when switching rooms
@@ -81,7 +95,7 @@ const Global = () => {
         /^[a-zA-Z0-9]+$/.test(newRoom) &&
         !rooms.some((room) => room.name === newRoom)
       ) {
-        socket.emit("create room", newRoom, username);
+        socket.emit("create room", newRoom, username); // Emit create room event
       } else {
         alert("Invalid room name or room already exists.");
       }
