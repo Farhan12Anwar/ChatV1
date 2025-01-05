@@ -61,7 +61,7 @@ io.on("connection", (socket) => {
           { inputs: command },
           {
             headers: {
-              Authorization: `Bearer ${`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`}`, // Use your Hugging Face API token here
+              Authorization: `Bearer ${process.env.HF_TOKEN}`, // Use your Hugging Face API token here
               "Content-Type": "application/json",
             },
           }

@@ -22,8 +22,11 @@ const Global = () => {
 
     socket.emit("join room", { room: currentRoom, username });
     socket.on("chat message", (msg) => {
-      setMessages((prevMessages) => [...prevMessages, msg]);
+      if (msg.room === currentRoom) {
+        setMessages((prevMessages) => [...prevMessages, msg]);
+      }
     });
+    
 
     return () => {
       socket.off("rooms list");
@@ -34,7 +37,7 @@ const Global = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     const newMessage = { sender: username, text: message, room: currentRoom };
-
+  
     if (message.startsWith("/createRoom ")) {
       const newRoom = message.split(" ")[1];
       if (
@@ -50,17 +53,18 @@ const Global = () => {
       const commandParts = message.trim().split(" ");
       const newRoom = commandParts[0].substring(1);
       if (newRoom !== currentRoom) {
-        socket.emit("leave room", currentRoom);
-        setCurrentRoom(newRoom);
+        socket.emit("leave room", currentRoom); // Emit leave room event
+        setCurrentRoom(newRoom); // Update current room state
+        setMessages([]); // Clear previous messages
       }
     } else if (message.startsWith("!")) {
-      console.log("!!!!!");
       socket.emit("chat message", { text: message, room: currentRoom });
     } else {
       socket.emit("chat message", newMessage);
     }
-    setMessage("");
+    setMessage(""); // Clear the input field
   };
+  
 
   return (
     <div className="App">

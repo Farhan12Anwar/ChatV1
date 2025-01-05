@@ -93,6 +93,7 @@ axios@^1.7.9:
   version "1.0.0"
   resolved "file:"
   dependencies:
+    "@huggingface/inference" "^2.8.1"
     axios "^1.7.9"
     backend "file:"
     cors "^2.8.5"
