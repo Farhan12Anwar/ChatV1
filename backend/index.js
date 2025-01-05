@@ -34,6 +34,7 @@ app.use(express.static("public"));
 io.on("connection", (socket) => {
   console.log(`User connected: ${socket.id}`);
 
+  // Join room
   socket.on("join room", ({ room, username }) => {
     socket.join(room);
     console.log(`${username} joined room: ${room}`);
@@ -42,46 +43,47 @@ io.on("connection", (socket) => {
     io.emit("rooms list", rooms);
   });
 
+  // Leave room
   socket.on("leave room", (room) => {
     socket.leave(room);
     console.log(`User left room: ${room}`);
   });
 
+  // Handle chat messages
   socket.on("chat message", async (msg) => {
     console.log("Received message:", msg);
 
-    if (msg.text.startsWith("!")) {
-      console.log("Detected command:", msg.text);
-
+    if (msg.image) {
+      // Handle image messages
+      console.log("Received an image message.");
+      io.to(msg.room).emit("chat message", msg); // Forward image messages to the room
+    } else if (msg.text?.startsWith("!")) {
+      // Handle commands
       const command = msg.text.substring(1); // Remove '!' to get the command text
+      console.log("Calling Hugging Face API with command:", command);
+
       try {
-        console.log("Calling Hugging Face API with command:", command);
         const response = await axios.post(
-          "https://api-inference.huggingface.co/models/google/flan-t5-small", // Correct Hugging Face endpoint
+          "https://api-inference.huggingface.co/models/google/flan-t5-small", // Hugging Face API endpoint
           { inputs: command },
           {
             headers: {
-              Authorization: `Bearer ${process.env.HF_TOKEN}`, // Use your Hugging Face API token here
+              Authorization: `Bearer ${process.env.HF_TOKEN}`, // Hugging Face API token
               "Content-Type": "application/json",
             },
           }
         );
 
-        if (response.data && response.data.length > 0) {
-          const apiResponse =
-            response.data[0].generated_text || "No response generated";
-          io.to(msg.room).emit("chat message", {
-            sender: "Omni",
-            text: apiResponse,
-            room: msg.room,
-          });
-        } else {
-          io.to(msg.room).emit("chat message", {
-            sender: "Omni",
-            text: "No response generated",
-            room: msg.room,
-          });
-        }
+        const apiResponse =
+          response.data && response.data.length > 0
+            ? response.data[0].generated_text || "No response generated"
+            : "No response generated";
+
+        io.to(msg.room).emit("chat message", {
+          sender: "Omni",
+          text: apiResponse,
+          room: msg.room,
+        });
       } catch (error) {
         console.error("Error querying Hugging Face API:", error.message);
         io.to(msg.room).emit("chat message", {
@@ -91,23 +93,27 @@ io.on("connection", (socket) => {
         });
       }
     } else {
-      io.to(msg.room).emit("chat message", msg);
+      // Handle text messages
+      io.to(msg.room).emit("chat message", msg); // Forward text messages to the room
       console.log(`Message in ${msg.room}: ${msg.text} by ${msg.sender}`);
     }
   });
 
+  // Create room
   socket.on("create room", (roomName) => {
     console.log(`Room created: ${roomName}`);
     io.emit("rooms list", getRoomsList());
   });
 
+  // Disconnect
   socket.on("disconnect", () => {
     console.log(`User disconnected: ${socket.id}`);
   });
 
+  // Get list of rooms
   const getRoomsList = () => {
     return Array.from(io.sockets.adapter.rooms.keys())
-      .filter((r) => !io.sockets.sockets.has(r))
+      .filter((room) => !io.sockets.sockets.has(room)) // Exclude socket-specific rooms
       .map((roomName) => {
         const users = Array.from(io.sockets.adapter.rooms.get(roomName) || []);
         return { name: roomName, users };

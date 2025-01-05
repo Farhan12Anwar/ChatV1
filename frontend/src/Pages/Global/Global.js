@@ -10,6 +10,7 @@ const socket = io("http://localhost:8080");
 const Global = () => {
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
+  const [image, setImage] = useState(null); // State for image
   const [currentRoom, setCurrentRoom] = useState("global");
   const [rooms, setRooms] = useState([{ name: "global", users: [] }]);
   const username = useLocation().state?.username;
@@ -26,7 +27,6 @@ const Global = () => {
         setMessages((prevMessages) => [...prevMessages, msg]);
       }
     });
-    
 
     return () => {
       socket.off("rooms list");
@@ -37,7 +37,7 @@ const Global = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     const newMessage = { sender: username, text: message, room: currentRoom };
-  
+
     if (message.startsWith("/createRoom ")) {
       const newRoom = message.split(" ")[1];
       if (
@@ -57,14 +57,38 @@ const Global = () => {
         setCurrentRoom(newRoom); // Update current room state
         setMessages([]); // Clear previous messages
       }
-    } else if (message.startsWith("!")) {
-      socket.emit("chat message", { text: message, room: currentRoom });
-    } else {
-      socket.emit("chat message", newMessage);
     }
-    setMessage(""); // Clear the input field
+    if (message.startsWith("!")) {
+      socket.emit("chat message", { text: message, room: currentRoom });
+    } else if (image && message) {
+      const newImageMessage = { sender: username, image, room: currentRoom };
+      const newMessage = { sender: username, text: message, room: currentRoom };
+      socket.emit("chat message", newMessage);
+      socket.emit("chat message", newImageMessage);
+      setMessage("");
+      setImage("");
+      setImage(null); // Clear the image state
+    } else if (message) {
+      const newMessage = { sender: username, text: message, room: currentRoom };
+      socket.emit("chat message", newMessage);
+      setMessage("");
+    } else if (image) {
+      const newImageMessage = { sender: username, image, room: currentRoom };
+      socket.emit("chat message", newImageMessage);
+      setImage("");
+    }
+    setMessage("");
   };
-  
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImage(reader.result); // Store the base64 string of the image
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   return (
     <div className="App">
@@ -83,7 +107,16 @@ const Global = () => {
                 }
               >
                 <span className="sender">{msg.sender}</span>
-                <p className="message-text">{msg.text}</p>
+                {msg.text && <p className="message-text">{msg.text}</p>}
+                {msg.image && (
+                  <img
+                    src={msg.image}
+                    alt="shared"
+                    className={
+                      msg.sender === username ? "my-image" : "other-image"
+                    }
+                  />
+                )}
               </li>
             ))}
           </ul>
@@ -97,8 +130,27 @@ const Global = () => {
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Type a message, a command, or ! for Hugging Face API"
           />
+          <div className="image-upload">
+            <label className="upload-button" htmlFor="file-input">
+              Choose Image
+            </label>
+            <input
+              id="file-input"
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              hidden
+            />
+          </div>
           <button type="submit">Send</button>
         </form>
+        {image && (
+          <div className="preview-container">
+            <div className="image-preview">
+              <img src={image} alt="Preview" />
+            </div>
+          </div>
+        )}
 
         <h3>
           To connect to different channels, enter '/' followed by the channel
