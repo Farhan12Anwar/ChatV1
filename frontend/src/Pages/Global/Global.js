@@ -53,29 +53,19 @@ const Global = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const newMessage = { sender: username, text: message, room: currentRoom };
-
-    if (message.startsWith("/createRoom")) {
-      const newRoom = message.split(" ")[1];
-      if (
-        newRoom &&
-        /^[a-zA-Z0-9]+$/.test(newRoom) &&
-        !rooms.some((room) => room.name === newRoom)
-      ) {
-        socket.emit("create room", newRoom);
-      } else {
-        alert("Invalid room name or room already exists.");
-      }
-    } else if (message.startsWith("/")) {
+  
+    if (message.startsWith("/")) {
       const commandParts = message.trim().split(" ");
       const newRoom = commandParts[0].substring(1);
-      setMessages("");
       if (newRoom !== currentRoom) {
         socket.emit("leave room", currentRoom); // Emit leave room event
         setCurrentRoom(newRoom); // Update current room state
         setMessages([]); // Clear previous messages
       }
+      setMessage(""); // Clear the input field
+      return; // Exit the function to prevent the message from being sent
     }
+  
     if (message.startsWith("!")) {
       socket.emit("chat message", { text: message, room: currentRoom });
     } else if (image && message) {
@@ -84,7 +74,6 @@ const Global = () => {
       socket.emit("chat message", newMessage);
       socket.emit("chat message", newImageMessage);
       setMessage("");
-      setImage("");
       setImage(null); // Clear the image state
     } else if (message) {
       const newMessage = { sender: username, text: message, room: currentRoom };
@@ -93,10 +82,10 @@ const Global = () => {
     } else if (image) {
       const newImageMessage = { sender: username, image, room: currentRoom };
       socket.emit("chat message", newImageMessage);
-      setImage("");
+      setImage(null); // Clear the image state
     }
-    setMessage("");
   };
+  
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
