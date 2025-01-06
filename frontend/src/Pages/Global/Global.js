@@ -12,8 +12,25 @@ const Global = () => {
   const [message, setMessage] = useState("");
   const [image, setImage] = useState(null); // State for image
   const [currentRoom, setCurrentRoom] = useState("global");
+  const [onlineUsers, setOnlineUsers] = useState([]);
   const [rooms, setRooms] = useState([{ name: "global", users: [] }]);
   const username = useLocation().state?.username;
+
+  useEffect(() => {
+    // Notify server of new user
+    if (username) {
+      socket.emit("user connected", username);
+    }
+
+    // Listen for online users updates
+    socket.on("online users", (users) => {
+      setOnlineUsers(users);
+    });
+
+    return () => {
+      socket.off("online users");
+    };
+  }, [username]);
 
   useEffect(() => {
     socket.emit("request rooms list");
@@ -38,7 +55,7 @@ const Global = () => {
     e.preventDefault();
     const newMessage = { sender: username, text: message, room: currentRoom };
 
-    if (message.startsWith("/createRoom ")) {
+    if (message.startsWith("/createRoom")) {
       const newRoom = message.split(" ")[1];
       if (
         newRoom &&
@@ -52,6 +69,7 @@ const Global = () => {
     } else if (message.startsWith("/")) {
       const commandParts = message.trim().split(" ");
       const newRoom = commandParts[0].substring(1);
+      setMessages("");
       if (newRoom !== currentRoom) {
         socket.emit("leave room", currentRoom); // Emit leave room event
         setCurrentRoom(newRoom); // Update current room state
@@ -92,7 +110,7 @@ const Global = () => {
 
   return (
     <div className="App">
-      <Sidebar rooms={rooms} />
+      <Sidebar rooms={rooms} onlineUsers={onlineUsers} />
       <div className="main-content">
         <Header />
         <h1>Global Chat</h1>

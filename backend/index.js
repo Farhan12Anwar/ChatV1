@@ -9,6 +9,8 @@ const axios = require("axios");
 const app = express();
 const PORT = 8000;
 
+let onlineUsers = {};
+
 const server = http.createServer(app);
 const io = socketIo(8080, {
   cors: {
@@ -33,6 +35,11 @@ app.use(express.static("public"));
 // Socket.IO connection
 io.on("connection", (socket) => {
   console.log(`User connected: ${socket.id}`);
+
+  socket.on("user connected", (username) => {
+    onlineUsers[socket.id] = username;
+    io.emit("online users", Object.values(onlineUsers)); // Broadcast online users
+  });
 
   // Join room
   socket.on("join room", ({ room, username }) => {
@@ -107,6 +114,8 @@ io.on("connection", (socket) => {
 
   // Disconnect
   socket.on("disconnect", () => {
+    delete onlineUsers[socket.id];
+    io.emit("online users", Object.values(onlineUsers)); // Broadcast updated online users
     console.log(`User disconnected: ${socket.id}`);
   });
 
