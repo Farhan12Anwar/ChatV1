@@ -59,7 +59,6 @@ io.on("connection", (socket) => {
   // Handle chat messages
   socket.on("chat message", async (msg) => {
     console.log("Received message:", msg);
-    
 
     if (msg.image) {
       // Handle image messages
@@ -67,12 +66,12 @@ io.on("connection", (socket) => {
       io.to(msg.room).emit("chat message", msg);
     } else if (msg.text?.startsWith("!")) {
       // Handle commands
-      const command = msg.text.substring(1); // Remove '!' to get the command text
+      const command = msg.text.substring(1);
       console.log("Calling Hugging Face API with command:", command);
 
       try {
         const response = await axios.post(
-          "https://api-inference.huggingface.co/models/google/flan-t5-small", // Hugging Face API endpoint
+          "https://api-inference.huggingface.co/models/microsoft/DialoGPT-large", // Hugging Face API endpoint
           { inputs: command },
           {
             headers: {
@@ -96,7 +95,7 @@ io.on("connection", (socket) => {
         console.error("Error querying Hugging Face API:", error.message);
         io.to(msg.room).emit("chat message", {
           sender: "Omni",
-          text: "There was an error processing your command.",
+          text: "What?",
           room: msg.room,
         });
       }
