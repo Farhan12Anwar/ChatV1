@@ -59,11 +59,12 @@ io.on("connection", (socket) => {
   // Handle chat messages
   socket.on("chat message", async (msg) => {
     console.log("Received message:", msg);
+    
 
     if (msg.image) {
       // Handle image messages
       console.log("Received an image message.");
-      io.to(msg.room).emit("chat message", msg); // Forward image messages to the room
+      io.to(msg.room).emit("chat message", msg);
     } else if (msg.text?.startsWith("!")) {
       // Handle commands
       const command = msg.text.substring(1); // Remove '!' to get the command text

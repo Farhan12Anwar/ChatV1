@@ -2,6 +2,7 @@ import React from "react";
 import "./Sidebar.css";
 
 const Sidebar = ({ rooms, onlineUsers }) => {
+  
   return (
     <div className="sidebar">
       <h2>Rooms</h2>

@@ -15,6 +15,7 @@ const Global = () => {
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [rooms, setRooms] = useState([{ name: "global", users: [] }]);
   const username = useLocation().state?.username;
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
 
   useEffect(() => {
     // Notify server of new user
@@ -53,7 +54,7 @@ const Global = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-  
+
     if (message.startsWith("/")) {
       const commandParts = message.trim().split(" ");
       const newRoom = commandParts[0].substring(1);
@@ -65,33 +66,29 @@ const Global = () => {
       setMessage(""); // Clear the input field
       return; // Exit the function to prevent the message from being sent
     }
-  
+    const newMessage = {
+      sender: username,
+      text: message || null,
+      image: image || null,
+      room: currentRoom,
+    };
+
     if (message.startsWith("!")) {
       socket.emit("chat message", { text: message, room: currentRoom });
-    } else if (image && message) {
-      const newImageMessage = { sender: username, image, room: currentRoom };
-      const newMessage = { sender: username, text: message, room: currentRoom };
+    } else if (message || image) {
       socket.emit("chat message", newMessage);
-      socket.emit("chat message", newImageMessage);
-      setMessage("");
-      setImage(null); // Clear the image state
-    } else if (message) {
-      const newMessage = { sender: username, text: message, room: currentRoom };
-      socket.emit("chat message", newMessage);
-      setMessage("");
-    } else if (image) {
-      const newImageMessage = { sender: username, image, room: currentRoom };
-      socket.emit("chat message", newImageMessage);
-      setImage(null); // Clear the image state
+      // setMessages((prevMessages) => [...prevMessages, newMessage]);
     }
+    setMessage("");
+    setImage(null); // Clear the image state
   };
-  
+
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImage(reader.result); // Store the base64 string of the image
+        setImage(reader.result); 
       };
       reader.readAsDataURL(file);
     }
@@ -114,7 +111,25 @@ const Global = () => {
                 }
               >
                 <span className="sender">{msg.sender}</span>
-                {msg.text && <p className="message-text">{msg.text}</p>}
+                {msg.text && (
+                  <p className="message-text">
+                    {msg.text.split(urlRegex).map((part, index) =>
+                      urlRegex.test(part) ? (
+                        <a
+                          key={index}
+                          href={part}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {part}
+                        </a>
+                      ) : (
+                        part
+                      )
+                    )}
+                  </p>
+                )}
+
                 {msg.image && (
                   <img
                     src={msg.image}
