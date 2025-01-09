@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 import { useLocation } from "react-router-dom";
 import "./Global.css";
@@ -10,20 +10,23 @@ const socket = io("http://localhost:8080");
 const Global = () => {
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
-  const [image, setImage] = useState(null); // State for image
+  const [image, setImage] = useState(null);
   const [currentRoom, setCurrentRoom] = useState("global");
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [rooms, setRooms] = useState([{ name: "global", users: [] }]);
   const username = useLocation().state?.username;
   const urlRegex = /(https?:\/\/[^\s]+)/g;
 
+  // References for the chat window
+  const chatWindowRef = useRef(null);
+  const isAtBottomRef = useRef(true);
+  const isUserPostingRef = useRef(false);
+
   useEffect(() => {
-    // Notify server of new user
     if (username) {
       socket.emit("user connected", username);
     }
 
-    // Listen for online users updates
     socket.on("online users", (users) => {
       setOnlineUsers(users);
     });
@@ -52,6 +55,30 @@ const Global = () => {
     };
   }, [currentRoom, username]);
 
+  useEffect(() => {
+    const chatWindow = chatWindowRef.current;
+
+    if (chatWindow) {
+      if (isUserPostingRef.current || isAtBottomRef.current) {
+        // Scroll to bottom if the user is posting or is already at the bottom
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+      }
+    }
+
+    // Reset user posting flag after messages are updated
+    isUserPostingRef.current = false;
+  }, [messages]);
+
+  const handleScroll = () => {
+    const chatWindow = chatWindowRef.current;
+    if (chatWindow) {
+      const isAtBottom =
+        chatWindow.scrollHeight - chatWindow.scrollTop ===
+        chatWindow.clientHeight;
+      isAtBottomRef.current = isAtBottom;
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -59,13 +86,14 @@ const Global = () => {
       const commandParts = message.trim().split(" ");
       const newRoom = commandParts[0].substring(1);
       if (newRoom !== currentRoom) {
-        socket.emit("leave room", currentRoom); // Emit leave room event
-        setCurrentRoom(newRoom); // Update current room state
-        setMessages([]); // Clear previous messages
+        socket.emit("leave room", currentRoom);
+        setCurrentRoom(newRoom);
+        setMessages([]);
       }
-      setMessage(""); // Clear the input field
-      return; // Exit the function to prevent the message from being sent
+      setMessage("");
+      return;
     }
+
     const newMessage = {
       sender: username,
       text: message || null,
@@ -77,10 +105,13 @@ const Global = () => {
       socket.emit("chat message", { text: message, room: currentRoom });
     } else if (message || image) {
       socket.emit("chat message", newMessage);
-      // setMessages((prevMessages) => [...prevMessages, newMessage]);
     }
+
     setMessage("");
-    setImage(null); // Clear the image state
+    setImage(null);
+
+    // Indicate that the user is posting a message
+    isUserPostingRef.current = true;
   };
 
   const handleImageChange = (e) => {
@@ -88,11 +119,23 @@ const Global = () => {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImage(reader.result); 
+        setImage(reader.result);
       };
       reader.readAsDataURL(file);
     }
   };
+
+  async function downloadImage(imageSrc, nameOfDownload = "my-image.png") {
+    const response = await fetch(imageSrc);
+    const blobImage = await response.blob();
+    const href = URL.createObjectURL(blobImage);
+    const anchorElement = document.createElement("a");
+    anchorElement.href = href;
+    anchorElement.download = nameOfDownload;
+    document.body.appendChild(anchorElement);
+    anchorElement.click();
+    document.body.removeChild(anchorElement);
+  }
 
   return (
     <div className="App">
@@ -101,7 +144,12 @@ const Global = () => {
         <Header />
         <h1>Global Chat</h1>
         <h2>Current Room: {currentRoom}</h2>
-        <div id="chat-window">
+        <div
+          id="chat-window"
+          ref={chatWindowRef}
+          onScroll={handleScroll}
+          style={{ overflowY: "scroll", height: "400px" }}
+        >
           <ul id="messages">
             {messages.map((msg, index) => (
               <li
@@ -129,9 +177,9 @@ const Global = () => {
                     )}
                   </p>
                 )}
-
                 {msg.image && (
                   <img
+                    onClick={() => downloadImage(msg.image)}
                     src={msg.image}
                     alt="shared"
                     className={
@@ -150,7 +198,7 @@ const Global = () => {
             id="message"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder="Type a message, a command, or ! for Hugging Face API"
+            placeholder="Type a message, a command, or ! for talking with Omni"
           />
           <div className="image-upload">
             <label className="upload-button" htmlFor="file-input">
@@ -176,7 +224,7 @@ const Global = () => {
 
         <h3>
           To connect to different channels, enter '/' followed by the channel
-          name or '!' for a Hugging Face command
+          name or '!' for talking with Omni
         </h3>
       </div>
     </div>
