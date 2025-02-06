@@ -1,6 +1,5 @@
 require("dotenv").config();
 const express = require("express");
-const mongoose = require("mongoose");
 const cors = require("cors");
 const socketIo = require("socket.io");
 const http = require("http");
@@ -11,7 +10,6 @@ const PORT = 8000;
 
 let onlineUsers = {};
 
-const server = http.createServer(app);
 const io = socketIo(8080, {
   cors: {
     origin: "http://localhost:3000",
@@ -55,7 +53,7 @@ io.on("connection", (socket) => {
       console.log("Received an image message.");
       io.to(msg.room).emit("chat message", msg);
     } else {
-      // Handle text messages
+      // Handle text/image messages
       try {
         io.to(msg.room).emit("chat message", msg);
         console.log(`Message in ${msg.room}: ${msg.text} by ${msg.sender}`);
