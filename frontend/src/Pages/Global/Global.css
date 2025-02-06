@@ -89,6 +89,7 @@ header h1 {
   display: flex;
   flex-direction: column;
   margin-bottom: 15px;
+  
 }
 
 .my-message {
@@ -227,6 +228,7 @@ img {
   max-height: 500px;
   border-radius: 5px;
   background-color: transparent;
+  padding:10px;
   border: none;
 }
 
@@ -279,5 +281,8 @@ img {
 @media only screen and (max-width: 737px) {
   .main-content {
     margin-left:auto;
+  }
+  .my-image{
+    max-width: 200px;
   }
 }

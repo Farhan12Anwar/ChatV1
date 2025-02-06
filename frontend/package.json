@@ -5,6 +5,7 @@
   "dependencies": {
     "cra-template": "1.2.0",
     "frontend": "file:",
+    "openai": "^4.79.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.0.2",

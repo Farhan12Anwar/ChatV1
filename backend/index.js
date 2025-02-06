@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const socketIo = require("socket.io");
 const http = require("http");
-const axios = require("axios");
+const axios = require("axios"); // Import axios for API calls
 
 const app = express();
 const PORT = 8000;
@@ -19,16 +19,10 @@ const io = socketIo(8080, {
     allowedHeaders: ["Content-Type"],
     credentials: true,
   },
+  maxHttpBufferSize: 1e8,
 });
 
-// MongoDB connection
-mongoose
-  .connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.log(err));
+app.use(cors());
 
 app.use(express.static("public"));
 
@@ -60,44 +54,14 @@ io.on("connection", (socket) => {
     if (msg.image) {
       console.log("Received an image message.");
       io.to(msg.room).emit("chat message", msg);
-    } else if (msg.text?.startsWith("!")) {
-      const command = msg.text.substring(1);
-      console.log("Calling Hugging Face API with command:", command);
-
-      try {
-        const response = await axios.post(
-          "https://api-inference.huggingface.co/models/microsoft/DialoGPT-large",
-          { inputs: command },
-          {
-            headers: {
-              Authorization: `Bearer ${process.env.HF_TOKEN}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        const apiResponse =
-          response.data && response.data.length > 0
-            ? response.data[0].generated_text || "No response generated"
-            : "No response generated";
-
-        io.to(msg.room).emit("chat message", {
-          sender: "Omni",
-          text: apiResponse,
-          room: msg.room,
-        });
-      } catch (error) {
-        console.error("Error querying Hugging Face API:", error.message);
-        io.to(msg.room).emit("chat message", {
-          sender: "Omni",
-          text: "What?",
-          room: msg.room,
-        });
-      }
     } else {
       // Handle text messages
-      io.to(msg.room).emit("chat message", msg); // Forward text messages to the room
-      console.log(`Message in ${msg.room}: ${msg.text} by ${msg.sender}`);
+      try {
+        io.to(msg.room).emit("chat message", msg);
+        console.log(`Message in ${msg.room}: ${msg.text} by ${msg.sender}`);
+      } catch (error) {
+        console.log(error);
+      }
     }
   });
 

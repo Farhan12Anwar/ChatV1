@@ -23,6 +23,23 @@ const Global = () => {
   const isUserPostingRef = useRef(false);
 
   useEffect(() => {
+    console.log("Socket connected:", socket.connected);
+
+    socket.on("connect", () => {
+      console.log("Socket reconnected!");
+    });
+
+    socket.on("disconnect", () => {
+      console.log("Socket disconnected!");
+    });
+
+    return () => {
+      socket.off("connect");
+      socket.off("disconnect");
+    };
+  }, []);
+
+  useEffect(() => {
     if (username) {
       socket.emit("user connected", username);
     }
@@ -43,7 +60,9 @@ const Global = () => {
     });
 
     socket.emit("join room", { room: currentRoom, username });
+
     socket.on("chat message", (msg) => {
+      console.log("New message received:", msg);
       if (msg.room === currentRoom) {
         setMessages((prevMessages) => [...prevMessages, msg]);
       }
@@ -101,9 +120,7 @@ const Global = () => {
       room: currentRoom,
     };
 
-    if (message.startsWith("!")) {
-      socket.emit("chat message", { text: message, room: currentRoom });
-    } else if (message || image) {
+    if (message || image) {
       socket.emit("chat message", newMessage);
     }
 
@@ -224,7 +241,6 @@ const Global = () => {
 
         <h3>
           To connect to different channels, enter '/' followed by the channel
-          name or '!' for talking with Omni
         </h3>
       </div>
     </div>
