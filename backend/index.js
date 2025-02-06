@@ -79,7 +79,7 @@ io.on("connection", (socket) => {
   // Get list of rooms
   const getRoomsList = () => {
     return Array.from(io.sockets.adapter.rooms.keys())
-      .filter((room) => !io.sockets.sockets.has(room)) // Exclude socket-specific rooms
+      .filter((room) => !io.sockets.sockets.has(room))
       .map((roomName) => {
         const users = Array.from(io.sockets.adapter.rooms.get(roomName) || []);
         return { name: roomName, users };
