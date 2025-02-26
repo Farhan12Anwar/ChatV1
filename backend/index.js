@@ -3,12 +3,13 @@ const express = require("express");
 const cors = require("cors");
 const socketIo = require("socket.io");
 const http = require("http");
-const axios = require("axios"); // Import axios for API calls
+const cron = require("node-cron");
 
 const app = express();
 const PORT = 8000;
 
 let onlineUsers = {};
+let roomActivity = {}; // Track last activity time for each room
 
 const io = socketIo(8080, {
   cors: {
@@ -21,7 +22,6 @@ const io = socketIo(8080, {
 });
 
 app.use(cors());
-
 app.use(express.static("public"));
 
 // Socket.IO connection
@@ -37,6 +37,9 @@ io.on("connection", (socket) => {
     socket.join(room);
     console.log(`${username} joined room: ${room}`);
 
+    // Update room activity time
+    roomActivity[room] = Date.now();
+
     const rooms = getRoomsList();
     io.emit("rooms list", rooms);
   });
@@ -46,37 +49,26 @@ io.on("connection", (socket) => {
     console.log(`User left room: ${room}`);
   });
 
-  socket.on("chat message", async (msg) => {
+  socket.on("chat message", (msg) => {
     console.log("Received message:", msg);
 
-    if (msg.image) {
-      console.log("Received an image message.");
-      io.to(msg.room).emit("chat message", msg);
-    } else {
-      // Handle text/image messages
-      try {
-        io.to(msg.room).emit("chat message", msg);
-        console.log(`Message in ${msg.room}: ${msg.text} by ${msg.sender}`);
-      } catch (error) {
-        console.log(error);
-      }
-    }
+    // Update room activity when a message is sent
+    roomActivity[msg.room] = Date.now();
+
+    io.to(msg.room).emit("chat message", msg);
   });
 
-  // Create room
   socket.on("create room", (roomName) => {
     console.log(`Room created: ${roomName}`);
     io.emit("rooms list", getRoomsList());
   });
 
-  // Disconnect
   socket.on("disconnect", () => {
     delete onlineUsers[socket.id];
-    io.emit("online users", Object.values(onlineUsers)); // Broadcast updated online users
+    io.emit("online users", Object.values(onlineUsers));
     console.log(`User disconnected: ${socket.id}`);
   });
 
-  // Get list of rooms
   const getRoomsList = () => {
     return Array.from(io.sockets.adapter.rooms.keys())
       .filter((room) => !io.sockets.sockets.has(room))
@@ -85,6 +77,22 @@ io.on("connection", (socket) => {
         return { name: roomName, users };
       });
   };
+});
+
+// Cron job to clean up inactive rooms every hour
+cron.schedule("0 * * * *", () => {
+  console.log("Running room cleanup...");
+  const now = Date.now();
+  const inactiveThreshold = 60 * 60 * 1000; // 1 hour
+
+  Object.keys(roomActivity).forEach((room) => {
+    if (now - roomActivity[room] > inactiveThreshold) {
+      console.log(`Removing inactive room: ${room}`);
+      delete roomActivity[room];
+    }
+  });
+
+  io.emit("rooms list", getRoomsList()); // Update frontend
 });
 
 app.listen(PORT, () => {

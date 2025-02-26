@@ -1,20 +1,18 @@
-import React from "react";
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import "./Home.css"; // Using a unique CSS file
 
 const Home = () => {
   const [username, setUsername] = useState("");
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    e.preventDefault();
     setUsername(e.target.value);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (username) {
-      // Navigate to the Global route and pass the username as state
       navigate("/global", { state: { username } });
     } else {
       alert("Please enter a username");
@@ -22,16 +20,24 @@ const Home = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <label htmlFor="userName">Enter Username</label>
-      <input
-        type="text"
-        id="username"
-        value={username}
-        onChange={handleChange}
-        placeholder="Enter Username"
-      />
-    </form>
+    <div className="home-page">
+      <div className="home-container">
+        <div className="home-box">
+          <h2>Welcome</h2>
+          <form onSubmit={handleSubmit}>
+            <label htmlFor="username">Enter Username</label>
+            <input
+              type="text"
+              id="username"
+              value={username}
+              onChange={handleChange}
+              placeholder="Enter Username"
+            />
+            <button type="submit">Join Chat</button>
+          </form>
+        </div>
+      </div>
+    </div>
   );
 };
 
