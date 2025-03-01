@@ -5,7 +5,9 @@ import "./Global.css";
 import Header from "../../Components/Header/Header";
 import Sidebar from "../../Components/Sidebar/Sidebar";
 
-const socket = io("https://chatv1-j0ol.onrender.com");
+const socket = io("https://chatv1-j0ol.onrender.com", {
+  transports: ["websocket", "polling"], // Ensure both WebSocket and polling are allowed
+});
 
 const Global = () => {
   const [messages, setMessages] = useState([]);
@@ -248,4 +250,3 @@ const Global = () => {
 };
 
 export default Global;
-  
