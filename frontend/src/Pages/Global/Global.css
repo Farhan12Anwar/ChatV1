@@ -19,7 +19,7 @@ body {
   padding: 20px;
   height: 100vh;
   overflow-x: hidden;
-  background-image: url('../../../public//background.png');
+  background: linear-gradient(135deg, #000000, #ffffff);
   color:white;
 }
 

@@ -83,7 +83,7 @@ io.on("connection", (socket) => {
 cron.schedule("0 * * * *", () => {
   console.log("Running room cleanup...");
   const now = Date.now();
-  const inactiveThreshold = 60 * 60 * 1000; // 1 hour
+  const inactiveThreshold = 60 * 60 * 24000; // 21 hour
 
   Object.keys(roomActivity).forEach((room) => {
     if (now - roomActivity[room] > inactiveThreshold) {

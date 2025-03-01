@@ -1,6 +1,7 @@
 import React from "react";
 import "./Header.css";
 import { useLocation } from "react-router-dom";
+// import '../../Pages/Global/Global.css';
 
 const Header = () => {
   const location = useLocation();

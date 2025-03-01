@@ -1,40 +1,43 @@
-/* Sidebar.css */
-
 .sidebar {
-    width: 250px;
-    padding: 15px;
-    background-color: #f4f4f4;
-    border-right: 1px solid #ddd;
-    height: 100vh;
-    overflow-y: auto;
-    position: fixed; /* Sidebar is fixed */
-    left: 0;
-    top: 0;
-    bottom: 0;
-    z-index: 999;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-    background-color: black;
-    color:white;
+  width: 250px;
+  padding: 15px;
+  border-right: 1px solid #555; /* Darker border */
+  height: 100vh;
+  overflow-y: auto;
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 999;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3); /* Stronger shadow */
+  background: linear-gradient(135deg, #222222, #000000); /* Darker gradient */
+  color: white;
+  display: flex;
+  flex-direction: column;
 }
 
-  
-  .sidebar h2 {
-    margin-bottom: 10px;
+/* Adjust text color dynamically */
+.sidebar h2,
+.sidebar ul li {
+  mix-blend-mode: difference;
+  color: #f0f0f0; /* Slightly off-white for better visibility */
+}
+
+/* Make headings and list items more visible */
+.sidebar h2 {
+  font-weight: bold;
+  padding-bottom: 5px;
+  color: #e0e0e0;
+}
+
+.sidebar ul li {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.5); /* More visible */
+}
+
+/* Responsive behavior */
+@media only screen and (max-width: 737px) {
+  .sidebar {
+      display: none;
   }
-  
-  .sidebar ul {
-    list-style-type: none;
-    padding: 0;
-  }
-  
-  .sidebar ul li {
-    padding: 5px 0;
-    border-bottom: 1px solid #ddd;
-  }
-  
-  @media only screen and (max-width: 737px) {
-    .sidebar {
-      display:none;
-    }
-    
-  }
+}
