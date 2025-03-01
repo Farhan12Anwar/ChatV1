@@ -5,7 +5,7 @@ import "./Global.css";
 import Header from "../../Components/Header/Header";
 import Sidebar from "../../Components/Sidebar/Sidebar";
 
-const socket = io("http://localhost:8080");
+const socket = io("https://chatv1-j0ol.onrender.com");
 
 const Global = () => {
   const [messages, setMessages] = useState([]);
