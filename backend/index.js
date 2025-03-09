@@ -4,8 +4,8 @@ const cors = require("cors");
 const socketIo = require("socket.io");
 const http = require("http");
 const cron = require("node-cron");
-const server = http.createServer(app);
 const app = express();
+const server = http.createServer(app);
 // const PORT = 8000;
 
 let onlineUsers = {};
