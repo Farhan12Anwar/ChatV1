@@ -5,9 +5,7 @@ import "./Global.css";
 import Header from "../../Components/Header/Header";
 import Sidebar from "../../Components/Sidebar/Sidebar";
 
-const socket = io("https://chatv1-j0ol.onrender.com", {
-  transports: ["websocket", "polling"], // Ensure both WebSocket and polling are allowed
-});
+const socket = io("https://chatv1-j0ol.onrender.com/");
 
 const Global = () => {
   const [messages, setMessages] = useState([]);
@@ -217,7 +215,7 @@ const Global = () => {
             id="message"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder="Type a message, a command, or ! for talking with Omni"
+            placeholder="Type a message"
           />
           <div className="image-upload">
             <label className="upload-button" htmlFor="file-input">
