@@ -6,7 +6,7 @@ const http = require("http");
 const cron = require("node-cron");
 const server = http.createServer(app);
 const app = express();
-const PORT = 8000;
+// const PORT = 8000;
 
 let onlineUsers = {};
 let roomActivity = {}; // Track last activity time for each room
