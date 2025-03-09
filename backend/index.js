@@ -1,4 +1,3 @@
-require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const socketIo = require("socket.io");
@@ -6,7 +5,9 @@ const http = require("http");
 const cron = require("node-cron");
 const app = express();
 const server = http.createServer(app);
-// const PORT = 8000;
+require("dotenv").config();
+
+const PORT = process.env.PORT || 8000; // Ensure PORT is defined
 
 let onlineUsers = {};
 let roomActivity = {}; // Track last activity time for each room
