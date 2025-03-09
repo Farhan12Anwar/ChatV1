@@ -14,7 +14,7 @@ let roomActivity = {}; // Track last activity time for each room
 const io = socketIo(8080, {
   cors: {
     origin: "*", // Allows requests from any domainz
-    methods: ["GET", "POST"],s
+    methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"],
     credentials: true,
   },
